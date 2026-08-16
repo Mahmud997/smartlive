@@ -1453,7 +1453,8 @@
   import { 
     getAuth, 
     GoogleAuthProvider, 
-    signInWithPopup 
+    signInWithRedirect, 
+    getRedirectResult 
   } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -1470,16 +1471,22 @@
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
 
-  // Функция входа через Google
+  // Функция входа через перенаправление (работает на всех смартфонах)
   window.loginWithGoogle = function() {
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        alert("Успешный вход! " + result.user.displayName);
-      })
-      .catch((error) => {
-        alert("Ошибка входа: " + error.message);
-      });
+    signInWithRedirect(auth, provider);
   };
+
+  // Проверка результата после возвращения пользователя на сайт
+  getRedirectResult(auth)
+    .then((result) => {
+      if (result && result.user) {
+        alert("Добро пожаловать, " + result.user.displayName + "!");
+        console.log("Успешный вход:", result.user);
+      }
+    })
+    .catch((error) => {
+      alert("Ошибка входа: " + error.message);
+    });
 </script>
 </body>
 </html>
