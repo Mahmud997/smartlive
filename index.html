@@ -407,7 +407,7 @@
             right: 0;
             background: #ffffff;
             display: flex;
-            justify-content: space-around;
+            justify-around;
             align-items: flex-end;
             padding: 6px 0 10px;
             border-top: 1px solid #e2e8f0;
@@ -1146,25 +1146,23 @@
     </div>
 
     <!-- МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ И РЕГИСТРАЦИИ -->
-    <!-- МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ И РЕГИСТРАЦИИ -->
-<div class="modal" id="auth-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">Вход / Регистрация</div>
-            <button class="btn-close" onclick="closeModal('auth-modal')">&times;</button>
+    <div class="modal" id="auth-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Вход / Регистрация</div>
+                <button class="btn-close" onclick="closeModal('auth-modal')">&times;</button>
+            </div>
+            
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; text-align: center;">
+                Войдите с помощью Google-аккаунта:
+            </p>
+            
+            <!-- Кнопка входа через Google -->
+            <button type="button" class="btn-order-taxi" onclick="window.loginWithGoogle()" style="background-color: #4285F4; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; cursor: pointer;">
+                <i class="fa-brands fa-google"></i> Войти через Google
+            </button>
         </div>
-        
-        <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; text-align: center;">
-            Войдите с помощью Google-аккаунта:
-        </p>
-        
-        <!-- Кнопка входа через Google -->
-        <!-- Кнопка входа через Google -->
-<button type="button" class="btn-order-taxi" onclick="window.loginWithGoogle()" style="background-color: #4285F4; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; cursor: pointer;">
-    <i class="fa-brands fa-google"></i> Войти через Google
-</button>
     </div>
-</div>
    
     <!-- МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ОБЪЯВЛЕНИЯ -->
     <div class="modal" id="add-modal">
@@ -1305,44 +1303,25 @@
 
         function setAuthType(type) {
             selectedAuthType = type;
-            document.getElementById('type-wa').classList.toggle('active', type === 'wa');
-            document.getElementById('type-sms').classList.toggle('active', type === 'sms');
+            const waBtn = document.getElementById('type-wa');
+            const smsBtn = document.getElementById('type-sms');
+            if (waBtn) waBtn.classList.toggle('active', type === 'wa');
+            if (smsBtn) smsBtn.classList.toggle('active', type === 'sms');
         }
 
-        function sendAuthCode() {
-            const phone = document.getElementById('auth-phone').value;
-            if(!phone || phone.length < 6) {
-                alert("Введите правильный номер телефона!");
-                return;
-            }
-            document.getElementById('step-phone').style.display = 'none';
-            document.getElementById('step-code').style.display = 'block';
-            
-            const methodText = selectedAuthType === 'wa' ? 'WhatsApp' : 'СМС';
-            notify(`Код отправлен на ${phone} через ${methodText} (тестовый код: 1234)`);
-        }
-
-        function verifyAuthCode() {
-            const code = document.getElementById('auth-code').value;
-            const phone = document.getElementById('auth-phone').value;
-
-            if(code === '1234' || code.length === 4) {
-                currentUser = {
-                    phone: phone,
-                    role: 'user'
-                };
-                document.getElementById('user-display-name').innerText = "Пользователь " + phone.slice(-4);
-                document.getElementById('user-display-phone').innerText = phone;
-                document.getElementById('auth-btn-text').innerText = "Выйти из аккаунта";
-                
-                closeModal('auth-modal');
-                document.getElementById('step-phone').style.display = 'block';
-                document.getElementById('step-code').style.display = 'none';
-                
-                notify("Вы успешно зарегистрировались!");
-            } else {
-                alert("Неверный код подтверждения!");
-            }
+        // Функция установки вошедшего пользователя из Firebase
+        function setUserData(user) {
+            currentUser = {
+                displayName: user.displayName || "Пользователь",
+                email: user.email || "",
+                phone: user.phoneNumber || user.email || "Google Аккаунт",
+                role: 'user'
+            };
+            document.getElementById('user-display-name').innerText = currentUser.displayName;
+            document.getElementById('user-display-phone').innerText = currentUser.phone;
+            document.getElementById('auth-btn-text').innerText = "Выйти из аккаунта";
+            closeModal('auth-modal');
+            notify("Вы успешно зарегистрировались!");
         }
 
         // Переключение роли Админа
@@ -1449,45 +1428,45 @@
     </script>
 
     <!-- Firebase Authentication SDK -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-  import { 
-    getAuth, 
-    GoogleAuthProvider, 
-    signInWithRedirect, 
-    getRedirectResult 
-  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+      import { 
+        getAuth, 
+        GoogleAuthProvider, 
+        signInWithRedirect, 
+        getRedirectResult 
+      } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYgfp3qrAzC4wTe6uhMXkdRhmGVMCT0gs",
-    authDomain: "smatrlive.firebaseapp.com",
-    projectId: "smatrlive",
-    storageBucket: "smatrlive.firebasestorage.app",
-    messagingSenderId: "42821091789",
-    appId: "1:42821091789:web:9596abf558af79d88e4484",
-    measurementId: "G-CWBNC3D4TW"
-  };
+      const firebaseConfig = {
+        apiKey: "AIzaSyAYgfp3qrAzC4wTe6uhMXkdRhmGVMCt0gs",
+        authDomain: "smatrlive.firebaseapp.com",
+        projectId: "smatrlive",
+        storageBucket: "smatrlive.firebasestorage.app",
+        messagingSenderId: "42821091789",
+        appId: "1:42821091789:web:9596abf558af79d88e4484",
+        measurementId: "G-CWBNC3D4TW"
+      };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
 
-  // Функция входа через перенаправление (работает на всех смартфонах)
-  window.loginWithGoogle = function() {
-    signInWithRedirect(auth, provider);
-  };
+      // Функция входа через перенаправление (работает на всех смартфонах)
+      window.loginWithGoogle = function() {
+        signInWithRedirect(auth, provider);
+      };
 
-  // Проверка результата после возвращения пользователя на сайт
-  getRedirectResult(auth)
-    .then((result) => {
-      if (result && result.user) {
-        alert("Добро пожаловать, " + result.user.displayName + "!");
-        console.log("Успешный вход:", result.user);
-      }
-    })
-    .catch((error) => {
-      alert("Ошибка входа: " + error.message);
-    });
-</script>
+      // Проверка результата после возвращения пользователя на сайт
+      getRedirectResult(auth)
+        .then((result) => {
+          if (result && result.user) {
+            window.setUserData(result.user);
+            console.log("Успешный вход:", result.user);
+          }
+        })
+        .catch((error) => {
+          alert("Ошибка входа: " + error.message);
+        });
+    </script>
 </body>
 </html>
