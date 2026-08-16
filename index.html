@@ -1146,36 +1146,25 @@
     </div>
 
     <!-- МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ И РЕГИСТРАЦИИ -->
-    <div class="modal" id="auth-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Вход / Регистрация</div>
-                <button class="btn-close" onclick="closeModal('auth-modal')">&times;</button>
-            </div>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Выберите способ получения кода подтверждения:</p>
-            
-            <div class="auth-type-selector">
-                <div class="auth-type-btn active" id="type-wa" onclick="setAuthType('wa')">
-                    <i class="fa-brands fa-whatsapp" style="color: #22c55e;"></i> WhatsApp
-                </div>
-                <div class="auth-type-btn" id="type-sms" onclick="setAuthType('sms')">
-                    <i class="fa-solid fa-comment-sms" style="color: #2563eb;"></i> СМС код
-                </div>
-            </div>
-
-            <div id="step-phone">
-                <input type="tel" id="auth-phone" class="taxi-input" placeholder="+7 (700) 000-00-00" style="margin-bottom: 12px;">
-                <button class="btn-order-taxi" onclick="sendAuthCode()">Получить код</button>
-            </div>
-
-            <div id="step-code" style="display: none;">
-                <p style="font-size: 12px; color: #64748b; margin-bottom: 8px;">Введите 4-значный код из сообщения:</p>
-                <input type="number" id="auth-code" class="taxi-input" placeholder="Код (например: 1234)" style="margin-bottom: 12px; text-align: center; letter-spacing: 4px; font-weight: 700;">
-                <button class="btn-order-taxi" onclick="verifyAuthCode()">Подтвердить и войти</button>
-            </div>
+    <!-- МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ И РЕГИСТРАЦИИ -->
+<div class="modal" id="auth-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Вход / Регистрация</div>
+            <button class="btn-close" onclick="closeModal('auth-modal')">&times;</button>
         </div>
+        
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 16px; text-align: center;">
+            Войдите с помощью Google-аккаунта:
+        </p>
+        
+        <!-- Кнопка входа через Google -->
+        <button class="btn-order-taxi" onclick="loginWithGoogle()" style="background-color: #4285F4; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; border: none; cursor: pointer;">
+            <i class="fa-brands fa-google"></i> Войти через Google
+        </button>
     </div>
-
+</div>
+   
     <!-- МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ОБЪЯВЛЕНИЯ -->
     <div class="modal" id="add-modal">
         <div class="modal-content">
@@ -1457,5 +1446,40 @@
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
     </script>
+
+    <!-- Firebase Authentication SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import { 
+    getAuth, 
+    GoogleAuthProvider, 
+    signInWithPopup 
+  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYgfp3qrAzC4wTe6uhMXkdRhmGVMCT0gs",
+    authDomain: "smatrlive.firebaseapp.com",
+    projectId: "smatrlive",
+    storageBucket: "smatrlive.firebasestorage.app",
+    messagingSenderId: "42821091789",
+    appId: "1:42821091789:web:9596abf558af79d88e4484",
+    measurementId: "G-CWBNC3D4TW"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // Функция входа через Google
+  window.loginWithGoogle = function() {
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        alert("Успешный вход! " + result.user.displayName);
+      })
+      .catch((error) => {
+        alert("Ошибка входа: " + error.message);
+      });
+  };
+</script>
 </body>
 </html>
