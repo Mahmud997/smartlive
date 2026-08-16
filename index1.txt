@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Сайрам Live — Сервис объявлений и Такси</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS для интерактивной карты -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #f4f6f8;
+            color: #333;
+            padding-bottom: 80px;
+        }
+
+        /* Шапка */
+        .header {
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 14px 16px 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .logo {
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logo-badge {
+            background: #fbbf24;
+            color: #1e293b;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        .location {
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        /* Поиск */
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 11px 16px 11px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        /* Быстрые действия (3 кнопки, QR удален) */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 14px 16px 6px;
+        }
+
+        .quick-btn {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 12px 6px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .quick-btn:active {
+            transform: scale(0.96);
+        }
+
+        .quick-btn i {
+            font-size: 22px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .quick-btn span {
+            font-size: 11px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .qa-yellow i { color: #eab308; }
+        .qa-green i { color: #16a34a; }
+        .qa-orange i { color: #ea580c; }
+
+        /* Секции */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 18px 16px 10px;
+            color: #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title a {
+            font-size: 13px;
+            font-weight: 500;
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        /* Категории */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 0 16px;
+        }
+
+        .category-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px 6px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .category-card:active {
+            transform: scale(0.96);
+        }
+
+        .category-card i {
+            font-size: 22px;
+            color: #2563eb;
+            margin-bottom: 6px;
+        }
+
+        .category-card span {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #475569;
+            line-height: 1.2;
+        }
+
+        /* Баннер */
+        .promo-banner {
+            margin: 16px 16px 0;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border-radius: 14px;
+            padding: 16px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .promo-text h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .promo-text p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .promo-icon {
+            font-size: 32px;
+            opacity: 0.9;
+        }
+
+        /* Лента */
+        .feed {
+            padding: 0 16px;
+            margin-top: 8px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            position: relative;
+        }
+
+        .card-img {
+            width: 88px;
+            height: 88px;
+            border-radius: 10px;
+            background-color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 26px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: #16a34a;
+            margin-top: 3px;
+        }
+
+        .card-price.negotiable {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-call {
+            background-color: #2563eb;
+            color: white;
+            padding: 6px 11px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .btn-call:active {
+            background-color: #1d4ed8;
+        }
+
+        .badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: #16a34a;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        /* Блок ТАКСИ */
+        .taxi-box {
+            background: #ffffff;
+            margin: 16px;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+        }
+
+        .taxi-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .taxi-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .taxi-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-order-taxi {
+            background: #16a34a;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .taxi-driver-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .driver-info h4 {
+            font-size: 14px;
+            color: #0f172a;
+        }
+
+        .driver-info p {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Стиль Карты */
+        #map {
+            width: 100%;
+            height: 220px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            z-index: 1;
+        }
+
+        /* Нижняя навигация */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding: 6px 0 10px;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 500;
+            width: 56px;
+        }
+
+        .nav-item.active {
+            color: #2563eb;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        .add-btn-wrapper {
+            position: relative;
+            top: -18px;
+        }
+
+        .add-btn {
+            background: #2563eb;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+            font-size: 22px;
+            text-decoration: none;
+        }
+
+        .add-btn:active {
+            transform: scale(0.94);
+        }
+
+        /* Скрытые страницы */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Категории */
+        .cat-list {
+            padding: 8px 16px 20px;
+        }
+
+        .cat-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        .cat-item i {
+            font-size: 20px;
+            color: #2563eb;
+            width: 28px;
+            text-align: center;
+        }
+
+        .cat-item span {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .cat-item small {
+            margin-left: auto;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        /* Профиль */
+        .profile-header {
+            background: #2563eb;
+            color: white;
+            padding: 24px 16px 20px;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 72px;
+            height: 72px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .profile-phone {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .profile-menu {
+            padding: 16px;
+        }
+
+        .profile-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        .profile-item i {
+            color: #2563eb;
+            width: 22px;
+        }
+
+        .profile-item span {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        /* Модальные окна и Формы */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .auth-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .auth-type-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #f8fafc;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .auth-type-btn.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        /* Система Push-уведомлений */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 16px;
+            left: 16px;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: #1e293b;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.3s forwards;
+            pointer-events: auto;
+        }
+
+        .toast i {
+            color: #22c55e;
+            font-size: 18px;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Панель администратора */
+        .admin-badge {
+            background: #dc2626;
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .admin-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            font-size: 20px;
+            color: #2563eb;
+        }
+
+        .stat-card p {
+            font-size: 12px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Контейнер для всплывающих уведомлений -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ==================== ГЛАВНАЯ ==================== -->
+    <div id="page-home" class="page active">
+        <div class="header">
+            <div class="header-top">
+                <div class="logo">
+                    Сайрам Live
+                    <span class="logo-badge">онлайн</span>
+                </div>
+                <div class="location">
+                    <i class="fa-solid fa-location-dot"></i> Сайрам
+                </div>
+            </div>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Найти мастера, услугу или товар...">
+            </div>
+        </div>
+
+        <!-- Быстрые действия (3 кнопки) -->
+        <div class="quick-actions">
+            <div class="quick-btn qa-yellow" onclick="showPage('taxi')">
+                <i class="fa-solid fa-taxi"></i>
+                <span>Такси</span>
+            </div>
+            <div class="quick-btn qa-orange" onclick="showMyAds()">
+                <i class="fa-solid fa-list"></i>
+                <span>Мои объявл.</span>
+            </div>
+            <div class="quick-btn qa-green" onclick="showPage('favorites')">
+                <i class="fa-solid fa-heart"></i>
+                <span>Избранное</span>
+            </div>
+        </div>
+
+        <!-- Баннер -->
+        <div class="promo-banner">
+            <div class="promo-text">
+                <h3>Разместите объявление</h3>
+                <p>Бесплатно • За 1 минуту</p>
+            </div>
+            <div class="promo-icon">
+                <i class="fa-solid fa-bullhorn"></i>
+            </div>
+        </div>
+
+        <!-- Категории -->
+        <div class="section-title">
+            Категории
+            <a href="#" onclick="showPage('categories'); return false;">Все →</a>
+        </div>
+        <div class="categories-grid">
+            <div class="category-card" onclick="showPage('taxi')">
+                <i class="fa-solid fa-taxi" style="color: #eab308;"></i>
+                <span>Такси</span>
+            </div>
+            <div class="category-card" onclick="showPage('categories')">
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+                <span>Мастера</span>
+            </div>
+            <div class="category-card" onclick="showPage('categories')">
+                <i class="fa-solid fa-cow"></i>
+                <span>Скот / Агро</span>
+            </div>
+            <div class="category-card" onclick="showPage('categories')">
+                <i class="fa-solid fa-car"></i>
+                <span>Авто</span>
+            </div>
+            <div class="category-card" onclick="showPage('categories')">
+                <i class="fa-solid fa-house"></i>
+                <span>Жильё</span>
+            </div>
+            <div class="category-card" onclick="showPage('categories')">
+                <i class="fa-solid fa-shirt"></i>
+                <span>Одежда</span>
+            </div>
+            <div class="category-card" onclick="showPage('categories')">
+                <i class="fa-solid fa-mobile-screen"></i>
+                <span>Электроника</span>
+            </div>
+            <div class="category-card" onclick="showPage('categories')">
+                <i class="fa-solid fa-utensils"></i>
+                <span>Еда / Кафе</span>
+            </div>
+        </div>
+
+        <!-- Лента -->
+        <div class="section-title">
+            Свежие объявления
+            <a href="#" onclick="notify('Лента обновлена'); return false;">Обновить</a>
+        </div>
+        <div class="feed" id="feed-container">
+
+            <div class="card">
+                <div class="badge">Хит</div>
+                <div class="card-img">
+                    <i class="fa-solid fa-fire-burner"></i>
+                </div>
+                <div class="card-info">
+                    <div>
+                        <div class="card-title">Опытный тандырщик и повар на тои и мероприятия</div>
+                        <div class="card-price negotiable">Договорная</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-meta"><i class="fa-solid fa-location-dot"></i> Центр</span>
+                        <a href="tel:+77001234567" class="btn-call"><i class="fa-solid fa-phone"></i> Позвонить</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div class="card-info">
+                    <div>
+                        <div class="card-title">Электрик + сантехник с выездом по Сайраму</div>
+                        <div class="card-price">от 3 000 ₸</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-meta"><i class="fa-solid fa-location-dot"></i> Сайрам</span>
+                        <a href="tel:+77001234567" class="btn-call"><i class="fa-solid fa-phone"></i> Позвонить</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <i class="fa-solid fa-truck"></i>
+                </div>
+                <div class="card-info">
+                    <div>
+                        <div class="card-title">Продажа бычков (племенные, упитанные)</div>
+                        <div class="card-price">450 000 ₸</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-meta"><i class="fa-solid fa-location-dot"></i> Мар-Тобе</span>
+                        <a href="tel:+77001234567" class="btn-call"><i class="fa-solid fa-phone"></i> Позвонить</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <i class="fa-solid fa-car"></i>
+                </div>
+                <div class="card-info">
+                    <div>
+                        <div class="card-title">Toyota Camry 2018, отличное состояние</div>
+                        <div class="card-price">8 900 000 ₸</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-meta"><i class="fa-solid fa-location-dot"></i> Сайрам</span>
+                        <a href="tel:+77001234567" class="btn-call"><i class="fa-solid fa-phone"></i> Позвонить</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <i class="fa-solid fa-house"></i>
+                </div>
+                <div class="card-info">
+                    <div>
+                        <div class="card-title">Сдам 2-комн. квартиру, центр, мебель</div>
+                        <div class="card-price">120 000 ₸/мес</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-meta"><i class="fa-solid fa-location-dot"></i> Центр</span>
+                        <a href="tel:+77001234567" class="btn-call"><i class="fa-solid fa-phone"></i> Позвонить</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-img">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                </div>
+                <div class="card-info">
+                    <div>
+                        <div class="card-title">Мастер по ремонту бытовой техники</div>
+                        <div class="card-price">от 2 500 ₸</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-meta"><i class="fa-solid fa-location-dot"></i> Сайрам</span>
+                        <a href="tel:+77001234567" class="btn-call"><i class="fa-solid fa-phone"></i> Позвонить</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== СТРАНИЦА ТАКСИ С КАРТОЙ ==================== -->
+    <div id="page-taxi" class="page">
+        <div class="header">
+            <div class="header-top">
+                <div class="logo"><i class="fa-solid fa-taxi" style="color: #fbbf24;"></i> Сайрам Такси</div>
+                <div class="location" onclick="showPage('home')">
+                    <i class="fa-solid fa-arrow-left"></i> Назад
+                </div>
+            </div>
+        </div>
+
+        <div style="padding-top: 4px;">
+            <!-- Интерактивная карта -->
+            <div style="padding: 16px 16px 0;">
+                <div id="map"></div>
+            </div>
+
+            <!-- Быстрый заказ -->
+            <div class="taxi-box" style="margin-top: 0;">
+                <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 10px;">Заказать такси (Предложи цену)</h3>
+                <div class="taxi-input-group">
+                    <input type="text" id="taxi-from" class="taxi-input" placeholder="Откуда (или выберите на карте)">
+                    <input type="text" id="taxi-to" class="taxi-input" placeholder="Куда (напр: Шымкент, Колос)">
+                    <div class="taxi-row">
+                        <input type="number" id="taxi-price" class="taxi-input" placeholder="Ваша цена (₸)">
+                        <input type="tel" id="taxi-phone" class="taxi-input" placeholder="Ваш телефон">
+                    </div>
+                </div>
+                <button class="btn-order-taxi" onclick="sendTaxiOrder()">
+                    <i class="fa-solid fa-paper-plane"></i> Отправить заявку водителям
+                </button>
+            </div>
+
+            <!-- Список таксистов -->
+            <div class="section-title">Водители на линии (Сайрам)</div>
+            <div style="padding: 0 16px;">
+                
+                <div class="taxi-driver-card">
+                    <div class="driver-info">
+                        <h4>Нурлан (Daewoo Gentra)</h4>
+                        <p>Маршрут: Сайрам ↔ Шымкент</p>
+                        <p style="color: #16a34a; font-weight: 600;">Свободен • 4 места</p>
+                    </div>
+                    <a href="tel:+77001234567" class="btn-call">
+                        <i class="fa-solid fa-phone"></i> Позвонить
+                    </a>
+                </div>
+
+                <div class="taxi-driver-card">
+                    <div class="driver-info">
+                        <h4>Баходыр (Chevrolet Cobalt)</h4>
+                        <p>Маршрут: Внутри Сайрама / Межгород</p>
+                        <p style="color: #16a34a; font-weight: 600;">Свободен</p>
+                    </div>
+                    <a href="tel:+77001234567" class="btn-call">
+                        <i class="fa-solid fa-phone"></i> Позвонить
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== КАТЕГОРИИ ==================== -->
+    <div id="page-categories" class="page">
+        <div class="header">
+            <div class="header-top">
+                <div class="logo">Категории</div>
+                <div class="location" onclick="showPage('home')">
+                    <i class="fa-solid fa-arrow-left"></i> Назад
+                </div>
+            </div>
+        </div>
+        <div class="cat-list">
+            <div class="cat-item" onclick="showPage('taxi')"><i class="fa-solid fa-taxi" style="color: #eab308;"></i><span>Такси и межгород</span><small>45</small></div>
+            <div class="cat-item"><i class="fa-solid fa-screwdriver-wrench"></i><span>Мастера и услуги</span><small>124</small></div>
+            <div class="cat-item"><i class="fa-solid fa-cow"></i><span>Скот / Агро</span><small>89</small></div>
+            <div class="cat-item"><i class="fa-solid fa-car"></i><span>Авто и запчасти</span><small>56</small></div>
+            <div class="cat-item"><i class="fa-solid fa-house"></i><span>Жильё и недвижимость</span><small>41</small></div>
+            <div class="cat-item"><i class="fa-solid fa-mobile-screen"></i><span>Электроника</span><small>67</small></div>
+            <div class="cat-item"><i class="fa-solid fa-shirt"></i><span>Одежда и обувь</span><small>38</small></div>
+            <div class="cat-item"><i class="fa-solid fa-utensils"></i><span>Еда и кафе</span><small>22</small></div>
+            <div class="cat-item"><i class="fa-solid fa-briefcase"></i><span>Работа и вакансии</span><small>19</small></div>
+            <div class="cat-item"><i class="fa-solid fa-baby"></i><span>Детские товары</span><small>15</small></div>
+            <div class="cat-item"><i class="fa-solid fa-couch"></i><span>Мебель и дом</span><small>27</small></div>
+            <div class="cat-item"><i class="fa-solid fa-paw"></i><span>Животные</span><small>11</small></div>
+            <div class="cat-item"><i class="fa-solid fa-ellipsis"></i><span>Другое</span><small>34</small></div>
+        </div>
+    </div>
+
+    <!-- ==================== ИЗБРАННОЕ ==================== -->
+    <div id="page-favorites" class="page">
+        <div class="header">
+            <div class="header-top">
+                <div class="logo">Избранное</div>
+            </div>
+        </div>
+        <div style="padding: 40px 20px; text-align: center; color: #94a3b8;">
+            <i class="fa-regular fa-heart" style="font-size: 48px; margin-bottom: 12px;"></i>
+            <p style="font-size: 15px;">Пока пусто</p>
+            <p style="font-size: 13px; margin-top: 6px;">Добавляйте объявления в избранное</p>
+        </div>
+    </div>
+
+    <!-- ==================== УВЕДОМЛЕНИЯ ==================== -->
+    <div id="page-notifications" class="page">
+        <div class="header">
+            <div class="header-top">
+                <div class="logo">Уведомления</div>
+                <div class="location" onclick="showPage('profile')">
+                    <i class="fa-solid fa-arrow-left"></i> Назад
+                </div>
+            </div>
+        </div>
+        <div style="padding: 16px;" id="notifications-list">
+            <div class="profile-item">
+                <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>
+                <div>
+                    <div style="font-weight: 600; font-size: 14px;">Добро пожаловать в Сайрам Live!</div>
+                    <div style="font-size: 12px; color: #64748b;">Вы успешно вошли в систему.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ПРОФИЛЬ ==================== -->
+    <div id="page-profile" class="page">
+        <div class="profile-header">
+            <div class="avatar"><i class="fa-solid fa-user" id="profile-icon"></i></div>
+            <div class="profile-name" id="user-display-name">Гость</div>
+            <div class="profile-phone" id="user-display-phone">Войдите, чтобы размещать объявления</div>
+        </div>
+        <div class="profile-menu">
+            <div class="profile-item" id="auth-btn-item" onclick="openAuthModal()">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span id="auth-btn-text">Войти / Зарегистрироваться</span>
+            </div>
+            <div class="profile-item" onclick="openAddModal()">
+                <i class="fa-solid fa-plus-circle"></i>
+                <span>Разместить объявление</span>
+            </div>
+            <div class="profile-item" onclick="showMyAds()">
+                <i class="fa-solid fa-list"></i>
+                <span>Мои объявления</span>
+            </div>
+            <div class="profile-item" onclick="showPage('favorites')">
+                <i class="fa-solid fa-heart"></i>
+                <span>Избранное</span>
+            </div>
+            <div class="profile-item" onclick="showPage('notifications')">
+                <i class="fa-solid fa-bell"></i>
+                <span>Уведомления</span>
+            </div>
+            <div class="profile-item" id="admin-panel-item" style="display: none;" onclick="showPage('admin')">
+                <i class="fa-solid fa-user-shield" style="color: #dc2626;"></i>
+                <span style="color: #dc2626; font-weight: 700;">Панель Администратора</span>
+            </div>
+            <div class="profile-item" onclick="toggleAdminRole()">
+                <i class="fa-solid fa-key"></i>
+                <span id="admin-toggle-text">Войти как Администратор</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== АДМИН-ПАНЕЛЬ ==================== -->
+    <div id="page-admin" class="page">
+        <div class="header" style="background-color: #0f172a;">
+            <div class="header-top">
+                <div class="logo">
+                    Админ Панель
+                    <span class="admin-badge">ADMIN</span>
+                </div>
+                <div class="location" onclick="showPage('profile')">
+                    <i class="fa-solid fa-arrow-left"></i> Выход
+                </div>
+            </div>
+        </div>
+        <div style="padding: 16px;">
+            <div class="admin-stat-grid">
+                <div class="stat-card">
+                    <h4>1,240</h4>
+                    <p>Пользователи</p>
+                </div>
+                <div class="stat-card">
+                    <h4>86</h4>
+                    <p>Объявления</p>
+                </div>
+                <div class="stat-card">
+                    <h4>18</h4>
+                    <p>Таксисты</p>
+                </div>
+                <div class="stat-card">
+                    <h4>342</h4>
+                    <p>Заказы такси</p>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-left: 0; margin-right: 0;">Управление платформой</div>
+            
+            <div class="profile-item" onclick="notify('Очередь модерации пуста')">
+                <i class="fa-solid fa-file-circle-check"></i>
+                <span>Модерация объявлений (0)</span>
+            </div>
+            <div class="profile-item" onclick="notify('Все водители проверены')">
+                <i class="fa-solid fa-taxi"></i>
+                <span>Управление таксистами</span>
+            </div>
+            <div class="profile-item" onclick="sendBroadcastNotification()">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Отправить пуш-уведомление всем</span>
+            </div>
+            <div class="profile-item" onclick="notify('База данных обновлена')">
+                <i class="fa-solid fa-database"></i>
+                <span>Резервное копирование БД</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Нижняя навигация -->
+    <div class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="showPage('home'); return false;" id="nav-home">
+            <i class="fa-solid fa-house"></i>
+            <span>Главная</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showPage('categories'); return false;" id="nav-categories">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Категории</span>
+        </a>
+        <div class="add-btn-wrapper">
+            <a href="#" class="add-btn" onclick="openAddModal(); return false;">
+                <i class="fa-solid fa-plus"></i>
+            </a>
+        </div>
+        <a href="#" class="nav-item" onclick="showPage('favorites'); return false;" id="nav-favorites">
+            <i class="fa-solid fa-bookmark"></i>
+            <span>Избранное</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showPage('profile'); return false;" id="nav-profile">
+            <i class="fa-solid fa-user"></i>
+            <span>Профиль</span>
+        </a>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ И РЕГИСТРАЦИИ -->
+    <div class="modal" id="auth-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Вход / Регистрация</div>
+                <button class="btn-close" onclick="closeModal('auth-modal')">&times;</button>
+            </div>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Выберите способ получения кода подтверждения:</p>
+            
+            <div class="auth-type-selector">
+                <div class="auth-type-btn active" id="type-wa" onclick="setAuthType('wa')">
+                    <i class="fa-brands fa-whatsapp" style="color: #22c55e;"></i> WhatsApp
+                </div>
+                <div class="auth-type-btn" id="type-sms" onclick="setAuthType('sms')">
+                    <i class="fa-solid fa-comment-sms" style="color: #2563eb;"></i> СМС код
+                </div>
+            </div>
+
+            <div id="step-phone">
+                <input type="tel" id="auth-phone" class="taxi-input" placeholder="+7 (700) 000-00-00" style="margin-bottom: 12px;">
+                <button class="btn-order-taxi" onclick="sendAuthCode()">Получить код</button>
+            </div>
+
+            <div id="step-code" style="display: none;">
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 8px;">Введите 4-значный код из сообщения:</p>
+                <input type="number" id="auth-code" class="taxi-input" placeholder="Код (например: 1234)" style="margin-bottom: 12px; text-align: center; letter-spacing: 4px; font-weight: 700;">
+                <button class="btn-order-taxi" onclick="verifyAuthCode()">Подтвердить и войти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ОБЪЯВЛЕНИЯ -->
+    <div class="modal" id="add-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Новое объявление</div>
+                <button class="btn-close" onclick="closeModal('add-modal')">&times;</button>
+            </div>
+            <div class="taxi-input-group">
+                <input type="text" id="ad-title" class="taxi-input" placeholder="Название (напр: Продаю велосипед)">
+                <input type="text" id="ad-price" class="taxi-input" placeholder="Цена (₸)">
+                <textarea id="ad-desc" class="taxi-input" style="height: 80px; resize: none;" placeholder="Описание товара или услуги..."></textarea>
+            </div>
+            <button class="btn-order-taxi" onclick="publishAd()">Опубликовать</button>
+        </div>
+    </div>
+
+    <!-- Leaflet JS для интерактивной карты -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Основной скрипт логики приложения -->
+    <script>
+        // Состояние пользователя
+        let currentUser = null;
+        let selectedAuthType = 'wa';
+        let mapInitialized = false;
+        let map, marker;
+
+        // Инициализация приложения
+        window.onload = function() {
+            initMap();
+        };
+
+        // Инициализация карты OpenStreetMap в Сайраме
+        function initMap() {
+            if (mapInitialized) return;
+            
+            // Координаты Сайрама (примерно 42.3089, 69.7592)
+            map = L.map('map').setView([42.3089, 69.7592], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            marker = L.marker([42.3089, 69.7592], {draggable: true}).addTo(map);
+            marker.bindPopup("Место подачи такси").openPopup();
+
+            marker.on('dragend', function(e) {
+                const coord = marker.getLatLng();
+                document.getElementById('taxi-from').value = `Точка: ${coord.lat.toFixed(4)}, ${coord.lng.toFixed(4)}`;
+            });
+
+            map.on('click', function(e) {
+                marker.setLatLng(e.latlng);
+                document.getElementById('taxi-from').value = `Клик: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+            });
+
+            mapInitialized = true;
+        }
+
+        // Переключение страниц
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const navMap = {
+                home: 'nav-home',
+                categories: 'nav-categories',
+                favorites: 'nav-favorites',
+                profile: 'nav-profile'
+            };
+            if (navMap[page]) {
+                document.getElementById(navMap[page]).classList.add('active');
+            }
+
+            if(page === 'taxi') {
+                setTimeout(() => { if (map) map.invalidateSize(); }, 200);
+            }
+
+            window.scrollTo(0, 0);
+        }
+
+        // Всплывающие Уведомления (Toast)
+        function notify(text) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fa-solid fa-bell"></i> <span>${text}</span>`;
+            container.appendChild(toast);
+
+            // Добавляем в историю уведомлений
+            const list = document.getElementById('notifications-list');
+            const item = document.createElement('div');
+            item.className = 'profile-item';
+            item.innerHTML = `<i class="fa-solid fa-bell" style="color:#2563eb;"></i><div><div style="font-weight:600;font-size:14px;">Системное уведомление</div><div style="font-size:12px;color:#64748b;">${text}</div></div>`;
+            list.prepend(item);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Отправка заявки Такси
+        function sendTaxiOrder() {
+            const from = document.getElementById('taxi-from').value;
+            const to = document.getElementById('taxi-to').value;
+            const price = document.getElementById('taxi-price').value;
+            const phone = document.getElementById('taxi-phone').value;
+
+            if(!from || !to || !price || !phone) {
+                alert('Пожалуйста, заполните все поля заказа такси!');
+                return;
+            }
+
+            notify(`Заявка такси [${from} → ${to}] отправлена 5 водителям!`);
+        }
+
+        // Авторизация и Регистрация
+        function openAuthModal() {
+            if(currentUser) {
+                if(confirm("Вы действительно хотите выйти из профиля?")) {
+                    currentUser = null;
+                    document.getElementById('user-display-name').innerText = "Гость";
+                    document.getElementById('user-display-phone').innerText = "Войдите, чтобы размещать объявления";
+                    document.getElementById('auth-btn-text').innerText = "Войти / Зарегистрироваться";
+                    document.getElementById('admin-panel-item').style.display = "none";
+                    notify("Вы вышли из системы");
+                }
+                return;
+            }
+            document.getElementById('auth-modal').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function setAuthType(type) {
+            selectedAuthType = type;
+            document.getElementById('type-wa').classList.toggle('active', type === 'wa');
+            document.getElementById('type-sms').classList.toggle('active', type === 'sms');
+        }
+
+        function sendAuthCode() {
+            const phone = document.getElementById('auth-phone').value;
+            if(!phone || phone.length < 6) {
+                alert("Введите правильный номер телефона!");
+                return;
+            }
+            document.getElementById('step-phone').style.display = 'none';
+            document.getElementById('step-code').style.display = 'block';
+            
+            const methodText = selectedAuthType === 'wa' ? 'WhatsApp' : 'СМС';
+            notify(`Код отправлен на ${phone} через ${methodText} (тестовый код: 1234)`);
+        }
+
+        function verifyAuthCode() {
+            const code = document.getElementById('auth-code').value;
+            const phone = document.getElementById('auth-phone').value;
+
+            if(code === '1234' || code.length === 4) {
+                currentUser = {
+                    phone: phone,
+                    role: 'user'
+                };
+                document.getElementById('user-display-name').innerText = "Пользователь " + phone.slice(-4);
+                document.getElementById('user-display-phone').innerText = phone;
+                document.getElementById('auth-btn-text').innerText = "Выйти из аккаунта";
+                
+                closeModal('auth-modal');
+                document.getElementById('step-phone').style.display = 'block';
+                document.getElementById('step-code').style.display = 'none';
+                
+                notify("Вы успешно зарегистрировались!");
+            } else {
+                alert("Неверный код подтверждения!");
+            }
+        }
+
+        // Переключение роли Админа
+        function toggleAdminRole() {
+            if(!currentUser) {
+                openAuthModal();
+                return;
+            }
+
+            if(currentUser.role === 'admin') {
+                currentUser.role = 'user';
+                document.getElementById('admin-panel-item').style.display = "none";
+                document.getElementById('admin-toggle-text').innerText = "Войти как Администратор";
+                notify("Режим администратора отключен");
+            } else {
+                const pass = prompt("Введите пароль администратора (по умолчанию: admin123):");
+                if(pass === 'admin123') {
+                    currentUser.role = 'admin';
+                    document.getElementById('admin-panel-item').style.display = "flex";
+                    document.getElementById('admin-toggle-text').innerText = "Выйти из режима Администратора";
+                    notify("Режим Администратора активирован!");
+                    showPage('admin');
+                } else if(pass !== null) {
+                    alert("Неверный пароль!");
+                }
+            }
+        }
+
+        // Функция подачи объявления
+        function openAddModal() {
+            if(!currentUser) {
+                alert("Размещать объявления могут только зарегистрированные пользователи!");
+                openAuthModal();
+                return;
+            }
+            document.getElementById('add-modal').classList.add('active');
+        }
+
+        function publishAd() {
+            const title = document.getElementById('ad-title').value;
+            const price = document.getElementById('ad-price').value;
+            
+            if(!title || !price) {
+                alert("Заполните название и цену!");
+                return;
+            }
+
+            const feed = document.getElementById('feed-container');
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="badge" style="background:#2563eb;">Новое</div>
+                <div class="card-img"><i class="fa-solid fa-box"></i></div>
+                <div class="card-info">
+                    <div>
+                        <div class="card-title">${title}</div>
+                        <div class="card-price">${price} ₸</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-meta"><i class="fa-solid fa-location-dot"></i> Сайрам</span>
+                        <a href="tel:${currentUser.phone}" class="btn-call"><i class="fa-solid fa-phone"></i> Позвонить</a>
+                    </div>
+                </div>
+            `;
+            feed.prepend(card);
+            closeModal('add-modal');
+            notify("Ваше объявление успешно опубликовано!");
+            showPage('home');
+        }
+
+        function showMyAds() {
+            if(!currentUser) {
+                openAuthModal();
+            } else {
+                notify("У вас пока нет активных объявлений");
+            }
+        }
+
+        function sendBroadcastNotification() {
+            const msg = prompt("Введите текст рассылки для всех пользователей:");
+            if(msg) {
+                notify("Piped-уведомление отправлено всем: " + msg);
+            }
+        }
+    </script>
+
+    <!-- Скрипт инициализации Firebase (модуль) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAYgfp3qrAzC4wTe6uhMXkdRhmGVMCt0gs",
+            authDomain: "smatrlive.firebaseapp.com",
+            projectId: "smatrlive",
+            storageBucket: "smatrlive.firebasestorage.app",
+            messagingSenderId: "42821091789",
+            appId: "1:42821091789:web:9596abf558af79d88e4484",
+            measurementId: "G-CWBNC3D4TW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
+</body>
+</html>
