@@ -3,66 +3,592 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Сайрам Live — Сервис объявлений и Такси</title>
+    <title>Сайрам Live — Доска объявлений и Такси</title>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Leaflet CSS для интерактивной карты -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --nav-height: 65px;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: #f4f6f8;
-            color: #333;
-            padding-bottom: 80px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-bottom: calc(var(--nav-height) + 20px);
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
         }
 
-        /* Шапка */
-        .header {
-            background-color: #2563eb;
-            color: #ffffff;
-            padding: 14px 16px 12px;
+        /* HEADER */
+        .top-header {
             position: sticky;
             top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            background: var(--card-bg);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            z-index: 90;
         }
 
-        .header-top {
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-online {
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* VIEWS MANAGEMENT */
+        .view {
+            display: none;
+            padding: 16px;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* BANNER */
+        .promo-banner {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+        }
+
+        .promo-banner h3 { font-size: 1.1rem; margin-bottom: 4px; }
+        .promo-banner p { font-size: 0.85rem; opacity: 0.9; }
+
+        /* CATEGORIES */
+        .section-title {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
         }
 
-        .logo {
-            font-size: 19px;
+        .section-title a {
+            font-size: 0.85rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .category-card {
+            background: var(--card-bg);
+            padding: 12px 8px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-align: center;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .category-card:active {
+            transform: scale(0.95);
+            background: #f1f5f9;
+        }
+
+        .category-card i {
+            font-size: 1.4rem;
+            color: var(--primary);
+        }
+
+        /* LISTINGS */
+        .listings-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .listing-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .badge-hit {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
             font-weight: 700;
-            letter-spacing: -0.4px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            z-index: 2;
+        }
+
+        .fav-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.85);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .fav-btn.active {
+            color: var(--danger);
+        }
+
+        .listing-content {
+            padding: 14px;
+        }
+
+        .listing-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .listing-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .listing-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .btn-call {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 6px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .logo-badge {
-            background: #fbbf24;
-            color: #1e293b;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 6px;
+        /* BOTTOM NAVBAR */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            height: var(--nav-height);
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            align-items: center;
+            z-index: 100;
         }
 
-        .location {
-            font-size: 13px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 10px;
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item i {
+            font-size: 1.25rem;
+        }
+
+        .add-btn-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .nav-add-btn {
+            position: absolute;
+            top: -22px;
+            background: var(--primary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            border: 3px solid var(--card-bg);
+        }
+
+        /* TAXI VIEW */
+        .taxi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* MODAL & FORMS */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.2s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP HEADER -->
+    <header class="top-header">
+        <div class="logo">
+            <i class="fa-solid fa-bolt"></i> Сайрам Live
+            <span class="badge-online">онлайн</span>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="switchView('view-notifications')">
+                <i class="fa-regular fa-bell"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- VIEW: HOME (ГЛАВНАЯ) -->
+    <main id="view-home" class="view active">
+        <!-- BANNER -->
+        <div class="promo-banner" onclick="switchView('view-taxi')">
+            <div>
+                <h3><i class="fa-solid fa-taxi"></i> Сайрам Такси</h3>
+                <p>Быстрый заказ • Поездки по району и в город</p>
+            </div>
+            <i class="fa-solid fa-chevron-right"></i>
+        </div>
+
+        <!-- CATEGORIES -->
+        <div class="section-title">
+            <span>Категории</span>
+            <a href="#" onclick="switchView('view-categories')">Все →</a>
+        </div>
+
+        <div class="categories-grid">
+            <div class="category-card" onclick="filterCategory('Такси')">
+                <i class="fa-solid fa-taxi"></i>
+                <span>Такси</span>
+            </div>
+            <div class="category-card" onclick="filterCategory('Мастера')">
+                <i class="fa-solid fa-wrench"></i>
+                <span>Мастера</span>
+            </div>
+            <div class="category-card" onclick="filterCategory('Скот / Агро')">
+                <i class="fa-solid fa-cow"></i>
+                <span>Скот / Агро</span>
+            </div>
+            <div class="category-card" onclick="filterCategory('Авто')">
+                <i class="fa-solid fa-car"></i>
+                <span>Авто</span>
+            </div>
+            <div class="category-card" onclick="filterCategory('Жильё')">
+                <i class="fa-solid fa-house"></i>
+                <span>Жильё</span>
+            </div>
+            <div class="category-card" onclick="filterCategory('Одежда')">
+                <i class="fa-solid fa-shirt"></i>
+                <span>Одежда</span>
+            </div>
+            <div class="category-card" onclick="filterCategory('Электроника')">
+                <i class="fa-solid fa-mobile-screen"></i>
+                <span>Техника</span>
+            </div>
+            <div class="category-card" onclick="filterCategory('Еда')">
+                <i class="fa-solid fa-utensils"></i>
+                <span>Еда</span>
+            </div>
+        </div>
+
+        <!-- LISTINGS -->
+        <div class="section-title">
+            <span id="listings-title">Свежие объявления</span>
+            <a href="#" onclick="renderListings()">Обновить</a>
+        </div>
+
+        <div id="listings-container" class="listings-grid">
+            <!-- JS dynamic content -->
+        </div>
+    </main>
+
+    <!-- VIEW: TAXI -->
+    <section id="view-taxi" class="view">
+        <div class="section-title">
+            <h2><i class="fa-solid fa-taxi" style="color:var(--primary);"></i> Сайрам Такси</h2>
+            <button class="icon-btn" onclick="switchView('view-home')"><i class="fa-solid fa-arrow-left"></i></button>
+        </div>
+
+        <div style="background:var(--card-bg); padding:16px; border-radius:12px; margin-bottom:16px; border:1px solid var(--border);">
+            <h3 style="margin-bottom:8px; font-size:1rem;">Быстрый заказ такси</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Укажите куда ехать и предложите свою цену</p>
+            <input type="text" id="taxi-from" class="form-control" placeholder="Откуда (напр: Сайрам центр)" style="margin-bottom:8px;">
+            <input type="text" id="taxi-to" class="form-control" placeholder="Куда (напр: Шымкент вокзал)" style="margin-bottom:8px;">
+            <input type="number" id="taxi-price" class="form-control" placeholder="Ваша цена (₸)" style="margin-bottom:12px;">
+            <button class="btn-submit" onclick="orderTaxi()">Отправить заявку</button>
+        </div>
+
+        <div class="section-title"> Водители на линии</div>
+        <div class="taxi-card">
+            <div>
+                <h4 style="font-size:0.95rem;">Нурлан (Daewoo Gentra)</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Маршрут: Сайрам ↔ Шымкент</p>
+                <small style="color:var(--secondary); font-weight:600;">Свободен • 4 места</small>
+            </div>
+            <a href="tel:+77000000001" class="btn-call"><i class="fa-solid fa-phone"></i> Позвонить</a>
+        </div>
+        <div class="taxi-card">
+            <div>
+                <h4 style="font-size:0.95rem;">Баходыр (Chevrolet Cobalt)</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Маршрут: Внутри Сайрама</p>
+                <small style="color:var(--secondary); font-weight:600;">Свободен</small>
+            </div>
+            <a href="tel:+77000000002" class="btn-call"><i class="fa-solid fa-phone"></i> Позвонить</a>
+        </div>
+    </section>
+
+    <!-- VIEW: CATEGORIES -->
+    <section id="view-categories" class="view">
+        <div class="section-title">
+            <h2>Все Категории</h2>
+            <button class="icon-btn" onclick="switchView('view-home')"><i class="fa-solid fa-arrow-left"></i></button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <div class="category-card" style="flex-direction:row; justify-content:space-between; padding:14px;" onclick="filterCategory('Такси')">
+                <span style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-taxi"></i> Такси и перевозки</span>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.8rem; color:var(--text-muted);"></i>
+            </div>
+            <div class="category-card" style="flex-direction:row; justify-content:space-between; padding:14px;" onclick="filterCategory('Мастера')">
+                <span style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-wrench"></i> Мастера и ремонт</span>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.8rem; color:var(--text-muted);"></i>
+            </div>
+            <div class="category-card" style="flex-direction:row; justify-content:space-between; padding:14px;" onclick="filterCategory('Скот / Агро')">
+                <span style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-cow"></i> Сельхоз и Скот</span>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.8rem; color:var(--text-muted);"></i>
+            </div>
+            <div class="category-card" style="flex-direction:row; justify-content:space-between; padding:14px;" onclick="filterCategory('Авто')">
+                <span style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-car"></i> Автомобили</span>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.8rem; color:var(--text-muted);"></i>
+            </div>
+            <div class="category-card" style="flex-direction:row; justify-content:space-between; padding:14px;" onclick="filterCategory('Жильё')">
+                <span style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-house"></i> Недвижимость</span>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.8rem; color:var(--text-muted);"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW: FAVORITES -->
+    <section id="view-favorites" class="view">
+        <div class="section-title">
+            <h2>Избранное</h2>
+        </div>
+        <div id="favorites-container" class="listings-grid">
+            <!-- Dynamic favs -->
+        </div>
+    </section>
+
+    <!-- VIEW: PROFILE -->
+    <section id="view-profile" class="view">
+        <div style="background:var(--card-bg); border-radius:16px; padding:20px; text-align:center; border:1px solid var(--border); margin-bottom:16px;">
+            <div style="width:60px; height:60px; background:#e0e7ff; color:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 12px auto;">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <h3 id="user-profile-name">Гость</h3>
+            <p id="user-profile-status" style="font-size:0.85rem; color:var(--text-muted);">Войдите для доступа к функциям</p>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <button class="category-card" style="flex-direction:row; justify-content:space-between; padding:14px; width:100%;" onclick="toggleAuth()">
+                <span style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-right-to-bracket"></i> <span id="auth-btn-text">Войти в             padding: 5px 10px;
             border-radius: 12px;
             display: flex;
             align-items: center;
