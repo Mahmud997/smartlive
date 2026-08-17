@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<meta name="description" content="Сайрам Live — объявления, услуги, такси и местные сервисы">
+<title>Сайрам Live — объявления и такси</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<link rel="stylesheet" href="style.css?v=4">
+<link rel="manifest" href="manifest.webmanifest?v=4">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ГЛАВНАЯ -->
+<section id="page-home" class="page active">
+  <header class="header">
+    <div class="header-top">
+      <div class="logo"><i class="fa-solid fa-bolt"></i> Сайрам Live <span class="logo-badge">онлайн</span></div>
+      <div class="location"><i class="fa-solid fa-location-dot"></i> Сайрам</div>
+    </div>
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="search-input" type="search" placeholder="Найти мастера, услугу или товар..." autocomplete="off">
+    </div>
+  </header>
+
+  <div class="quick-actions">
+    <button class="quick-btn qa-yellow" onclick="showPage('taxi')"><i class="fa-solid fa-taxi"></i><span>Такси</span></button>
+    <button class="quick-btn qa-orange" onclick="showMyAds()"><i class="fa-solid fa-list"></i><span>Мои объявл.</span></button>
+    <button class="quick-btn qa-green" onclick="showPage('favorites')"><i class="fa-solid fa-heart"></i><span>Избранное</span></button>
+  </div>
+
+  <div class="promo-banner" onclick="openAddModal()">
+    <div class="promo-text"><h3>Разместите объявление</h3><p>Бесплатно • быстро • для Сайрама</p></div>
+    <div class="promo-icon"><i class="fa-solid fa-bullhorn"></i></div>
+  </div>
+
+  <div class="section-title"><span>Категории</span><a href="#" onclick="showPage('categories');return false">Все →</a></div>
+  <div class="categories-grid">
+    <button class="category-card" onclick="selectCategory('Такси')"><i class="fa-solid fa-taxi" style="color:#eab308"></i><span>Такси</span></button>
+    <button class="category-card" onclick="selectCategory('Мастера')"><i class="fa-solid fa-screwdriver-wrench"></i><span>Мастера</span></button>
+    <button class="category-card" onclick="selectCategory('Скот / Агро')"><i class="fa-solid fa-cow"></i><span>Скот / Агро</span></button>
+    <button class="category-card" onclick="selectCategory('Авто')"><i class="fa-solid fa-car"></i><span>Авто</span></button>
+    <button class="category-card" onclick="selectCategory('Жильё')"><i class="fa-solid fa-house"></i><span>Жильё</span></button>
+    <button class="category-card" onclick="selectCategory('Одежда')"><i class="fa-solid fa-shirt"></i><span>Одежда</span></button>
+    <button class="category-card" onclick="selectCategory('Электроника')"><i class="fa-solid fa-mobile-screen"></i><span>Техника</span></button>
+    <button class="category-card" onclick="selectCategory('Еда')"><i class="fa-solid fa-utensils"></i><span>Еда / Кафе</span></button>
+  </div>
+
+  <div class="section-title"><span id="feed-title">Свежие объявления</span><a href="#" onclick="refreshFeed();return false">Обновить</a></div>
+  <div id="feed-container" class="feed"></div>
+</section>
+
+<!-- ТАКСИ -->
+<section id="page-taxi" class="page">
+  <header class="header"><div class="header-top"><div class="logo"><i class="fa-solid fa-taxi" style="color:#eab308"></i> Сайрам Такси</div><div class="location" onclick="showPage('home')"><i class="fa-solid fa-arrow-left"></i> Назад</div></div></header>
+  <div id="map"></div>
+  <div class="taxi-box">
+    <h3 style="font-size:15px;margin-bottom:10px">Заказать такси — предложи цену</h3>
+    <div class="taxi-input-group">
+      <input id="taxi-from" class="taxi-input" placeholder="Откуда (или выберите на карте)">
+      <input id="taxi-to" class="taxi-input" placeholder="Куда (например: Шымкент, Колос)">
+      <div class="taxi-row"><input id="taxi-price" type="number" class="taxi-input" placeholder="Ваша цена (₸)"><input id="taxi-phone" type="tel" class="taxi-input" placeholder="Ваш телефон"></div>
+    </div>
+    <button class="btn-order-taxi" onclick="sendTaxiOrder()"><i class="fa-solid fa-paper-plane"></i> Отправить заявку водителям</button>
+  </div>
+  <div class="section-title">Водители на линии</div>
+  <div style="padding:0 16px">
+    <div class="taxi-driver-card"><div class="driver-info"><h4>Нурлан — Daewoo Gentra</h4><p>Сайрам ↔ Шымкент</p><p style="color:#16a34a;font-weight:700">Свободен • 4 места</p></div><a class="btn-call" href="tel:+77001234567"><i class="fa-solid fa-phone"></i> Позвонить</a></div>
+    <div class="taxi-driver-card"><div class="driver-info"><h4>Баходыр — Chevrolet Cobalt</h4><p>Сайрам / Межгород</p><p style="color:#16a34a;font-weight:700">Свободен</p></div><a class="btn-call" href="tel:+77001234567"><i class="fa-solid fa-phone"></i> Позвонить</a></div>
+  </div>
+</section>
+
+<!-- КАТЕГОРИИ -->
+<section id="page-categories" class="page">
+  <header class="header"><div class="header-top"><div class="logo">Категории</div><div class="location" onclick="showPage('home')"><i class="fa-solid fa-arrow-left"></i> Назад</div></div></header>
+  <div class="cat-list" id="category-list"></div>
+</section>
+
+<!-- ИЗБРАННОЕ -->
+<section id="page-favorites" class="page">
+  <header class="header"><div class="header-top"><div class="logo">Избранное</div></div></header>
+  <div id="favorites-container" class="feed"></div>
+</section>
+
+<!-- УВЕДОМЛЕНИЯ -->
+<section id="page-notifications" class="page">
+  <header class="header"><div class="header-top"><div class="logo">Уведомления</div><div class="location" onclick="showPage('profile')"><i class="fa-solid fa-arrow-left"></i> Назад</div></div></header>
+  <div id="notifications-list" class="profile-menu"></div>
+</section>
+
+<!-- ПРОФИЛЬ -->
+<section id="page-profile" class="page">
+  <div class="profile-header"><div class="avatar"><i class="fa-solid fa-user"></i></div><div class="profile-name" id="user-display-name">Гость</div><div class="profile-phone" id="user-display-phone">Войдите, чтобы размещать объявления</div></div>
+  <div class="profile-menu">
+    <div class="profile-item" onclick="openAuthModal()"><i class="fa-solid fa-right-to-bracket"></i><span id="auth-btn-text">Войти / Зарегистрироваться</span></div>
+    <div class="profile-item" onclick="openAddModal()"><i class="fa-solid fa-plus-circle"></i><span>Разместить объявление</span></div>
+    <div class="profile-item" onclick="showMyAds()"><i class="fa-solid fa-list"></i><span>Мои объявления</span></div>
+    <div class="profile-item" onclick="showPage('favorites')"><i class="fa-solid fa-heart"></i><span>Избранное</span></div>
+    <div class="profile-item" onclick="showPage('notifications')"><i class="fa-solid fa-bell"></i><span>Уведомления</span></div>
+    <div class="profile-item" id="admin-panel-item" style="display:none" onclick="showPage('admin')"><i class="fa-solid fa-user-shield" style="color:#dc2626"></i><span style="color:#dc2626">Панель администратора</span></div>
+    <div class="profile-item" onclick="toggleAdminRole()"><i class="fa-solid fa-key"></i><span id="admin-toggle-text">Войти как Администратор</span></div>
+  </div>
+</section>
+
+<!-- АДМИН -->
+<section id="page-admin" class="page">
+  <div class="admin-header"><div class="header-top"><div class="logo"><i class="fa-solid fa-shield-halved"></i> Админ Панель <span class="admin-badge">ADMIN</span></div><div class="location" style="color:#cbd5e1" onclick="showPage('profile')"><i class="fa-solid fa-arrow-left"></i> Назад</div></div></div>
+  <div class="admin-stat-grid">
+    <div class="stat-card"><h4 id="stat-users">1</h4><p>Пользователи</p></div>
+    <div class="stat-card"><h4 id="stat-ads">0</h4><p>Объявления</p></div>
+    <div class="stat-card"><h4>18</h4><p>Таксисты</p></div>
+    <div class="stat-card" id="stat-orders"><h4>0</h4><p>Заказы такси</p></div>
+  </div>
+  <div class="section-title">Управление платформой</div>
+  <div class="profile-menu">
+    <div class="profile-item" onclick="notify('Очередь модерации проверена','success')"><i class="fa-solid fa-file-circle-check"></i><span>Модерация объявлений</span></div>
+    <div class="profile-item" onclick="notify('Все водители проверены','success')"><i class="fa-solid fa-taxi"></i><span>Управление таксистами</span></div>
+    <div class="profile-item" onclick="sendBroadcastNotification()"><i class="fa-solid fa-bullhorn"></i><span>Отправить уведомление всем</span></div>
+    <div class="profile-item" onclick="exportData()"><i class="fa-solid fa-download"></i><span>Экспорт локальных данных</span></div>
+    <div class="profile-item" onclick="clearDemoData()"><i class="fa-solid fa-trash"></i><span>Очистить мои тестовые данные</span></div>
+  </div>
+</section>
+
+<!-- NAV -->
+<nav class="bottom-nav">
+  <a href="#" class="nav-item active" id="nav-home" onclick="showPage('home');return false"><i class="fa-solid fa-house"></i><span>Главная</span></a>
+  <a href="#" class="nav-item" id="nav-categories" onclick="showPage('categories');return false"><i class="fa-solid fa-layer-group"></i><span>Категории</span></a>
+  <div class="add-btn-wrapper"><a href="#" class="add-btn" onclick="openAddModal();return false" aria-label="Добавить объявление"><i class="fa-solid fa-plus"></i></a></div>
+  <a href="#" class="nav-item" id="nav-favorites" onclick="showPage('favorites');return false"><i class="fa-solid fa-bookmark"></i><span>Избранное</span></a>
+  <a href="#" class="nav-item" id="nav-profile" onclick="showPage('profile');return false"><i class="fa-solid fa-user"></i><span>Профиль</span></a>
+</nav>
+
+<!-- AUTH -->
+<div class="modal" id="auth-modal">
+  <div class="modal-content">
+    <div class="modal-header"><div class="modal-title">Вход / Регистрация</div><button class="btn-close" onclick="closeModal('auth-modal')">&times;</button></div>
+    <p style="font-size:12px;color:#64748b;text-align:center;margin-bottom:14px">Google-вход сохраняется через Firebase, если Firebase Authentication настроен.</p>
+    <button class="btn-primary" onclick="loginWithGoogle()"><i class="fa-brands fa-google"></i> Войти через Google</button>
+    <button class="btn-primary" style="margin-top:8px;background:#f1f5f9;color:#0f172a" onclick="demoLogin()">Продолжить как демо-пользователь</button>
+  </div>
+</div>
+
+<!-- ADD -->
+<div class="modal" id="add-modal">
+  <div class="modal-content">
+    <div class="modal-header"><div class="modal-title">Новое объявление</div><button class="btn-close" onclick="closeModal('add-modal')">&times;</button></div>
+    <div class="form-group"><label>Название *</label><input id="ad-title" class="form-control" placeholder="Например: Электрик с выездом"></div>
+    <div class="form-group"><label>Категория</label><select id="ad-category" class="form-control"></select></div>
+    <div class="form-group"><label>Цена *</label><input id="ad-price" class="form-control" placeholder="Например: 3000 ₸"></div>
+    <div class="form-group"><label>Телефон</label><input id="ad-phone" class="form-control" placeholder="+7 7XX XXX XX XX"></div>
+    <div class="form-group"><label>Описание</label><textarea id="ad-desc" class="form-control" placeholder="Опишите товар или услугу..."></textarea></div>
+    <button class="btn-primary" onclick="publishAd()">Опубликовать</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js?v=4"></script>
+
+<!-- Firebase подключается ОДИН раз. Если Authentication не настроен, демо-вход всё равно работает. -->
+<script type="module" src="firebase-auth.js?v=4"></script>
+<script>
+/*
+  One-time recovery from the old SL/PWA cache.
+  This removes old registrations and caches, then installs the safe v4 worker.
+*/
+(async function(){
+  try{
+    if("serviceWorker" in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const reg of regs){
+        try{ await reg.unregister(); }catch(e){}
+      }
+    }
+    if("caches" in window){
+      const keys=await caches.keys();
+      for(const key of keys){
+        if(!key.includes("sairam-live-v4-safe")){
+          try{ await caches.delete(key); }catch(e){}
+        }
+      }
+    }
+  }catch(e){
+    console.warn("Cache recovery:",e);
+  }
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",()=>{
+      navigator.serviceWorker.register("./sw.js?v=4")
+        .then(reg=>reg.update().catch(()=>{}))
+        .catch(console.warn);
+    });
+  }
+})();
+</script>
+<noscript><div style="padding:30px;text-align:center">Для работы Сайрам Live включите JavaScript.</div></noscript>
+</body>
+</html>
