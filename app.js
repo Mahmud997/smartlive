@@ -192,12 +192,22 @@ function toggleAdminRole(){
   }else if(pass!==null) notify("Неверный пароль","error");
 }
 function openAddModal(){
-  if(!currentUser){notify("Сначала войдите или используйте демо-вход","error");openAuthModal();return;}
-  document.getElementById("ad-title").value="";
-  document.getElementById("ad-price").value="";
-  document.getElementById("ad-phone").value=currentUser.phone||"";
-  document.getElementById("ad-desc").value="";
-  renderCategories();openModal("add-modal");
+  // Синхронизируем глобальный объект пользователя
+  const user = window.currentUser || currentUser;
+  
+  if(!user){
+    notify("Сначала войдите или используйте демо-вход", "error");
+    openAuthModal();
+    return;
+  }
+  
+  document.getElementById("ad-title").value = "";
+  document.getElementById("ad-price").value = "";
+  document.getElementById("ad-phone").value = user.phone || user.email || "";
+  document.getElementById("ad-desc").value = "";
+  
+  renderCategories();
+  openModal("add-modal");
 }
 function publishAd(){
   if(!currentUser){notify("Требуется вход","error");return;}
