@@ -210,16 +210,48 @@ function openAddModal(){
   openModal("add-modal");
 }
 function publishAd(){
-  if(!currentUser){notify("Требуется вход","error");return;}
-  const title=document.getElementById("ad-title").value.trim();
-  const category=document.getElementById("ad-category").value;
-  const price=document.getElementById("ad-price").value.trim();
-  const phone=document.getElementById("ad-phone").value.trim()||currentUser.phone||"";
-  const description=document.getElementById("ad-desc").value.trim();
-  if(title.length<3){notify("Введите название объявления","error");return;}
-  if(!price){notify("Укажите цену","error");return;}
-  const ad={id:"ad_"+Date.now(),title,category,price,phone,description,location:"Сайрам",icon:iconFor(category),owner:currentUser.uid,createdAt:Date.now()};
-  ads.unshift(ad);saveJSON(STORAGE.ads,ads);closeModal("add-modal");renderFeed();updateProfileUI();notify("Объявление опубликовано");showPage("home");
+  const user = window.currentUser || currentUser;
+  
+  if(!user){
+    notify("Требуется вход", "error");
+    return;
+  }
+  
+  const title = document.getElementById("ad-title").value.trim();
+  const category = document.getElementById("ad-category").value;
+  const price = document.getElementById("ad-price").value.trim();
+  const phone = document.getElementById("ad-phone").value.trim() || user.phone || user.email || "";
+  const description = document.getElementById("ad-desc").value.trim();
+  
+  if(title.length < 3){
+    notify("Введите название объявления", "error");
+    return;
+  }
+  if(!price){
+    notify("Укажите цену", "error");
+    return;
+  }
+  
+  const ad = {
+    id: "ad_" + Date.now(),
+    title,
+    category,
+    price,
+    phone,
+    description,
+    location: "Сайрам",
+    icon: iconFor(category),
+    owner: user.uid,
+    createdAt: Date.now()
+  };
+  
+  ads.unshift(ad);
+  saveJSON(STORAGE.ads, ads);
+  closeModal("add-modal");
+  renderFeed();
+  updateProfileUI();
+  notify("Объявление опубликовано");
+  showPage("home");
 }
 function iconFor(cat){
   const m={"Такси":"fa-taxi","Мастера":"fa-screwdriver-wrench","Скот / Агро":"fa-cow","Авто":"fa-car","Жильё":"fa-house","Электроника":"fa-mobile-screen","Одежда":"fa-shirt","Еда":"fa-utensils","Работа":"fa-briefcase"};
